@@ -1,0 +1,372 @@
+{% extends "base.html" %}
+
+{% block title %}Register Student - Smart Attendance{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-4 border-bottom">
+    <h1 class="h2"><i class="fas fa-user-plus me-2"></i>Register Student</h1>
+</div>
+
+<!-- Flash Messages -->
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        {% for category, message in messages %}
+            <div class="alert alert-{{ 'danger' if category == 'error' else 'success' }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+{% endwith %}
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Student Information</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="/register_student" id="studentForm">
+                    <!-- Personal Information -->
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="enrollment_no" class="form-label">Enrollment Number *</label>
+                                <input type="text" class="form-control" id="enrollment_no" name="enrollment_no" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="name" class="form-label">Full Name *</label>
+                                <input type="text" class="form-control" id="name" name="name" required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="roll_no" class="form-label">Roll Number</label>
+                                <input type="text" class="form-control" id="roll_no" name="roll_no">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="section" class="form-label">Section *</label>
+                                <select class="form-select" id="section" name="section" required>
+                                    <option value="">Select Section</option>
+                                    <option value="A">Section A</option>
+                                    <option value="B">Section B</option>
+                                    <option value="C">Section C</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Contact Information -->
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="phone" class="form-label">Phone Number</label>
+                                <input type="text" class="form-control" id="phone" name="phone" placeholder="9876543210">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="parent_phone" class="form-label">Parent's Phone</label>
+                                <input type="text" class="form-control" id="parent_phone" name="parent_phone" placeholder="9876543210">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="email" class="form-label">Email Address</label>
+                                <input type="email" class="form-control" id="email" name="email" placeholder="student@example.com">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="course" class="form-label">Course</label>
+                                <input type="text" class="form-control" id="course" name="course" placeholder="B.Tech Computer Science">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="semester" class="form-label">Semester</label>
+                        <select class="form-select" id="semester" name="semester">
+                            <option value="">Select Semester</option>
+                            <option value="1">Semester 1</option>
+                            <option value="2">Semester 2</option>
+                            <option value="3">Semester 3</option>
+                            <option value="4">Semester 4</option>
+                            <option value="5">Semester 5</option>
+                            <option value="6">Semester 6</option>
+                            <option value="7">Semester 7</option>
+                            <option value="8">Semester 8</option>
+                        </select>
+                    </div>
+
+                    <!-- AUTOMATIC MULTIPLE FACE CAPTURE -->
+                    <div class="mb-4">
+                        <label class="form-label">Automatic Face Capture (Multiple Photos) *</label>
+                        
+                        <div class="camera-preview p-3 text-center mb-3 border rounded bg-light">
+                            <video id="video" width="400" height="300" autoplay class="d-none rounded"></video>
+                            <canvas id="canvas" width="400" height="300" class="d-none"></canvas>
+                            <div id="no-camera" class="text-muted py-4">
+                                <i class="fas fa-user fa-3x mb-3 text-secondary"></i>
+                                <p class="mb-1">Camera preview will appear here</p>
+                                <small class="text-muted">System will automatically capture 4 photos</small>
+                            </div>
+                            
+                            <!-- Photo Previews -->
+                            <div id="photo-previews" class="row mt-3 d-none">
+                                <div class="col-3">
+                                    <div class="text-center">
+                                        <img id="photo-preview-1" src="" alt="Photo 1" class="img-fluid rounded border mb-2" style="max-height: 80px;">
+                                        <small class="text-success">Photo 1 ✓</small>
+                                    </div>
+                                </div>
+                                <div class="col-3">
+                                    <div class="text-center">
+                                        <img id="photo-preview-2" src="" alt="Photo 2" class="img-fluid rounded border mb-2" style="max-height: 80px;">
+                                        <small class="text-muted">Photo 2</small>
+                                    </div>
+                                </div>
+                                <div class="col-3">
+                                    <div class="text-center">
+                                        <img id="photo-preview-3" src="" alt="Photo 3" class="img-fluid rounded border mb-2" style="max-height: 80px;">
+                                        <small class="text-muted">Photo 3</small>
+                                    </div>
+                                </div>
+                                <div class="col-3">
+                                    <div class="text-center">
+                                        <img id="photo-preview-4" src="" alt="Photo 4" class="img-fluid rounded border mb-2" style="max-height: 80px;">
+                                        <small class="text-muted">Photo 4</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="d-grid gap-2">
+                            <button type="button" id="start-camera" class="btn btn-outline-primary">
+                                <i class="fas fa-camera me-2"></i>Start Automatic Face Capture
+                            </button>
+                            <button type="button" id="stop-camera" class="btn btn-outline-danger d-none">
+                                <i class="fas fa-stop me-2"></i>Stop Capture
+                            </button>
+                        </div>
+                        
+                        <!-- Hidden inputs for multiple photos -->
+                        <input type="hidden" id="photo_data_1" name="photo_data_1">
+                        <input type="hidden" id="photo_data_2" name="photo_data_2">
+                        <input type="hidden" id="photo_data_3" name="photo_data_3">
+                        <input type="hidden" id="photo_data_4" name="photo_data_4">
+                        
+                        <div class="form-text">
+                            <small>
+                                <i class="fas fa-info-circle me-1"></i>
+                                System will automatically capture 4 photos from different angles for better face recognition accuracy.
+                            </small>
+                        </div>
+                    </div>
+
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-success btn-lg py-3" id="submit-btn" disabled>
+                            <i class="fas fa-save me-2"></i>Register Student with Face Data
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0"><i class="fas fa-info-circle me-2"></i>Instructions</h5>
+            </div>
+            <div class="card-body">
+                <ol class="small">
+                    <li class="mb-2">Fill all required student details</li>
+                    <li class="mb-2">Click "Start Automatic Face Capture"</li>
+                    <li class="mb-2">System will automatically capture 4 photos</li>
+                    <li class="mb-2">Move your face slightly between captures</li>
+                    <li class="mb-2">Wait for all 4 photos to be captured</li>
+                    <li class="mb-2">Better face recognition with multiple angles</li>
+                    <li>Click register to save student with face data</li>
+                </ol>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0"><i class="fas fa-camera me-2"></i>Automatic Capture</h5>
+            </div>
+            <div class="card-body">
+                <div class="text-center">
+                    <div class="mb-3">
+                        <i class="fas fa-sync-alt text-primary me-2"></i>
+                        <span class="small">Automatically captures 4 photos</span>
+                    </div>
+                    <div class="mb-3">
+                        <i class="fas fa-angle-left text-success me-2"></i>
+                        <span class="small">Different face angles</span>
+                    </div>
+                    <div class="mb-3">
+                        <i class="fas fa-expressions text-success me-2"></i>
+                        <span class="small">Varied expressions</span>
+                    </div>
+                    <div>
+                        <i class="fas fa-bolt text-warning me-2"></i>
+                        <span class="small">Better recognition accuracy</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const video = document.getElementById('video');
+    const canvas = document.getElementById('canvas');
+    const startCamera = document.getElementById('start-camera');
+    const stopCamera = document.getElementById('stop-camera');
+    const photoPreviews = document.getElementById('photo-previews');
+    const submitBtn = document.getElementById('submit-btn');
+    const form = document.getElementById('studentForm');
+
+    let stream = null;
+    let captureInterval = null;
+    let photosCaptured = 0;
+    const totalPhotos = 4;
+
+    // Start automatic capture
+    startCamera.addEventListener('click', async function() {
+        try {
+            stream = await navigator.mediaDevices.getUserMedia({ 
+                video: { 
+                    width: { ideal: 1280 },
+                    height: { ideal: 720 },
+                    facingMode: 'user'
+                } 
+            });
+            
+            video.srcObject = stream;
+            video.classList.remove('d-none');
+            photoPreviews.classList.remove('d-none');
+            startCamera.classList.add('d-none');
+            stopCamera.classList.remove('d-none');
+            
+            // Start automatic capture sequence
+            startAutomaticCapture();
+            
+        } catch (err) {
+            console.error('Camera error:', err);
+            alert('Error accessing camera: ' + err.message);
+        }
+    });
+
+    // Stop capture
+    stopCamera.addEventListener('click', function() {
+        stopAutomaticCapture();
+    });
+
+    function startAutomaticCapture() {
+        photosCaptured = 0;
+        updatePhotoPreviews();
+        
+        // Capture first photo immediately
+        setTimeout(() => capturePhoto(), 1000);
+        
+        // Set interval for remaining photos
+        captureInterval = setInterval(() => {
+            if (photosCaptured < totalPhotos) {
+                capturePhoto();
+            } else {
+                stopAutomaticCapture();
+            }
+        }, 2000); // Capture every 2 seconds
+    }
+
+    function stopAutomaticCapture() {
+        if (captureInterval) {
+            clearInterval(captureInterval);
+            captureInterval = null;
+        }
+        
+        if (stream) {
+            stream.getTracks().forEach(track => track.stop());
+        }
+        
+        startCamera.classList.remove('d-none');
+        stopCamera.classList.add('d-none');
+        
+        // Enable submit button if all photos captured
+        if (photosCaptured >= totalPhotos) {
+            submitBtn.disabled = false;
+            console.log('✅ All photos captured successfully!');
+        }
+    }
+
+    function capturePhoto() {
+        if (photosCaptured >= totalPhotos) return;
+        
+        const context = canvas.getContext('2d');
+        context.drawImage(video, 0, 0, canvas.width, canvas.height);
+        
+        const dataURL = canvas.toDataURL('image/jpeg', 0.8);
+        const photoNumber = photosCaptured + 1;
+        
+        // Save photo data
+        document.getElementById(`photo_data_${photoNumber}`).value = dataURL;
+        
+        // Update preview
+        const preview = document.getElementById(`photo-preview-${photoNumber}`);
+        preview.src = dataURL;
+        preview.parentElement.querySelector('small').className = 'text-success';
+        preview.parentElement.querySelector('small').textContent = `Photo ${photoNumber} ✓`;
+        
+        photosCaptured++;
+        updatePhotoPreviews();
+        
+        console.log(`✅ Photo ${photoNumber} captured!`);
+    }
+
+    function updatePhotoPreviews() {
+        // Update progress
+        const progress = (photosCaptured / totalPhotos) * 100;
+        console.log(`📸 Capture progress: ${photosCaptured}/${totalPhotos} (${progress}%)`);
+    }
+
+    // Form validation
+    form.addEventListener('submit', function(e) {
+        const enrollment = document.getElementById('enrollment_no').value.trim();
+        const name = document.getElementById('name').value.trim();
+        const section = document.getElementById('section').value;
+        
+        if (!enrollment || !name || !section) {
+            e.preventDefault();
+            alert('Please fill all required fields (Enrollment, Name, Section).');
+            return;
+        }
+        
+        if (photosCaptured < totalPhotos) {
+            e.preventDefault();
+            alert(`Please capture all ${totalPhotos} photos before registering.`);
+            return;
+        }
+        
+        // Show loading state
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Processing Face Data...';
+        submitBtn.disabled = true;
+    });
+});
+</script>
+{% endblock %}

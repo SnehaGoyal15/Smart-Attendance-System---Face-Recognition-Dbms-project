@@ -1,0 +1,102 @@
+-- Create Database
+CREATE DATABASE IF NOT EXISTS smart_attendance_system;
+USE smart_attendance_system;
+
+-- 1. Students Table (Main student information)
+CREATE TABLE students (
+    enrollment_no VARCHAR(20) PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    roll_no VARCHAR(10),
+    phone VARCHAR(15),
+    parent_phone VARCHAR(15),
+    email VARCHAR(100),
+    course VARCHAR(50),
+    semester VARCHAR(10),
+    section VARCHAR(10) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 2. Face Encodings Table (Face recognition data - MOST IMPORTANT)
+CREATE TABLE face_encodings (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    enrollment_no VARCHAR(20) UNIQUE NOT NULL,
+    face_encoding BLOB NOT NULL,
+    encoding_version VARCHAR(10) DEFAULT 'v1',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (enrollment_no) REFERENCES students(enrollment_no) ON DELETE CASCADE
+);
+
+-- 3. Subjects Table (Subjects management)
+CREATE TABLE subjects (
+    subject_id INT AUTO_INCREMENT PRIMARY KEY,
+    subject_code VARCHAR(20) NOT NULL,
+    subject_name VARCHAR(100) NOT NULL,
+    course VARCHAR(50),
+    semester VARCHAR(10),
+    section VARCHAR(10),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 4. Attendance Sessions Table (Each attendance session)
+CREATE TABLE attendance_sessions (
+    session_id INT AUTO_INCREMENT PRIMARY KEY,
+    subject_id INT NOT NULL,
+    section VARCHAR(10) NOT NULL,
+    session_date DATE NOT NULL,
+    session_time TIME NOT NULL,
+    group_photo_data LONGTEXT,
+    total_students INT DEFAULT 0,
+    present_count INT DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (subject_id) REFERENCES subjects(subject_id) ON DELETE CASCADE
+);
+
+-- 5. Attendance Records Table (Individual attendance)
+CREATE TABLE attendance_records (
+    record_id INT AUTO_INCREMENT PRIMARY KEY,
+    session_id INT NOT NULL,
+    enrollment_no VARCHAR(20) NOT NULL,
+    status ENUM('present', 'absent') NOT NULL DEFAULT 'absent',
+    confidence_score FLOAT,
+    recognition_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    manual_override BOOLEAN DEFAULT FALSE,
+    FOREIGN KEY (session_id) REFERENCES attendance_sessions(session_id) ON DELETE CASCADE,
+    FOREIGN KEY (enrollment_no) REFERENCES students(enrollment_no) ON DELETE CASCADE,
+    UNIQUE KEY unique_attendance (session_id, enrollment_no)
+);
+
+-- 6. Teachers Table (Optional - for teacher management)
+CREATE TABLE teachers (
+    teacher_id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    email VARCHAR(100) UNIQUE,
+    phone VARCHAR(15),
+    department VARCHAR(50),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 7. Subject Allocation Table (Which teacher teaches which subject)
+CREATE TABLE subject_allocation (
+    allocation_id INT AUTO_INCREMENT PRIMARY KEY,
+    teacher_id INT NOT NULL,
+    subject_id INT NOT NULL,
+    section VARCHAR(10),
+    academic_year VARCHAR(20),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (teacher_id) REFERENCES teachers(teacher_id) ON DELETE CASCADE,
+    FOREIGN KEY (subject_id) REFERENCES subjects(subject_id) ON DELETE CASCADE
+);
+
+-- Create Indexes for Better Performance
+CREATE INDEX idx_students_section ON students(section);
+CREATE INDEX idx_attendance_session_date ON attendance_sessions(session_date);
+CREATE INDEX idx_attendance_records_session ON attendance_records(session_id);
+CREATE INDEX idx_attendance_records_student ON attendance_records(enrollment_no);
+CREATE INDEX idx_face_encodings_student ON face_encodings(enrollment_no);
+
+-- Verify Database Creation
+SELECT '✅ Database created successfully!' as status;
+
+-- Show all tables
+SHOW TABLES;

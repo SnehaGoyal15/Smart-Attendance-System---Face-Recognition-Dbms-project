@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+
+{% block title %}Add Subject - Smart Attendance{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-4 border-bottom">
+    <h1 class="h2"><i class="fas fa-book me-2"></i>Add Subject</h1>
+</div>
+
+<!-- Flash Messages -->
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        {% for category, message in messages %}
+            <div class="alert alert-{{ 'danger' if category == 'error' else 'success' }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+{% endwith %}
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Add New Subject</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="/add_subject">
+                    <div class="mb-3">
+                        <label for="subject_code" class="form-label">Subject Code *</label>
+                        <input type="text" class="form-control" id="subject_code" name="subject_code" required
+                               placeholder="e.g., CS301">
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="subject_name" class="form-label">Subject Name *</label>
+                        <input type="text" class="form-control" id="subject_name" name="subject_name" required
+                               placeholder="e.g., Database Management System">
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="course" class="form-label">Course</label>
+                        <input type="text" class="form-control" id="course" name="course"
+                               placeholder="e.g., B.Tech Computer Science">
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="semester" class="form-label">Semester</label>
+                                <select class="form-select" id="semester" name="semester">
+                                    <option value="">Select Semester</option>
+                                    <option value="1">Semester 1</option>
+                                    <option value="2">Semester 2</option>
+                                    <option value="3">Semester 3</option>
+                                    <option value="4">Semester 4</option>
+                                    <option value="5">Semester 5</option>
+                                    <option value="6">Semester 6</option>
+                                    <option value="7">Semester 7</option>
+                                    <option value="8">Semester 8</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="section" class="form-label">Section *</label>
+                                <select class="form-select" id="section" name="section" required>
+                                    <option value="">Select Section</option>
+                                    <option value="A">Section A</option>
+                                    <option value="B">Section B</option>
+                                    <option value="C">Section C</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="fas fa-plus-circle me-2"></i>Add Subject
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Subject Information</h5>
+            </div>
+            <div class="card-body">
+                <div class="small">
+                    <p><strong>Why add subjects?</strong></p>
+                    <ul>
+                        <li>Organize attendance by subject</li>
+                        <li>Track attendance for specific courses</li>
+                        <li>Generate subject-wise reports</li>
+                        <li>Manage different sections separately</li>
+                    </ul>
+                    
+                    <p class="mt-3"><strong>Instructions:</strong></p>
+                    <ol>
+                        <li>Fill in subject code and name (required)</li>
+                        <li>Select the appropriate section</li>
+                        <li>Add course and semester details if needed</li>
+                        <li>Click "Add Subject" to save</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

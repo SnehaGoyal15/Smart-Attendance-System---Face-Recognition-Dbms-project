@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+
+{% block title %}Smart Attendance System{% endblock %}
+
+{% block content %}
+<div class="row align-items-center min-vh-75">
+    <div class="col-lg-6">
+        <div class="text-center text-lg-start">
+            <h1 class="display-4 fw-bold text-primary mb-4">
+                <i class="fas fa-camera me-3"></i>Smart Attendance System
+            </h1>
+            <p class="lead text-muted mb-4">
+                Automated attendance management using advanced face recognition technology. 
+                Capture group photos and let our system automatically mark attendance for your class.
+            </p>
+            <div class="row mb-5">
+                <div class="col-md-4 mb-3">
+                    <div class="text-center">
+                        <i class="fas fa-user-check fa-2x text-success mb-2"></i>
+                        <h5>Face Recognition</h5>
+                        <p class="small text-muted">Automated student identification</p>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <div class="text-center">
+                        <i class="fas fa-camera fa-2x text-primary mb-2"></i>
+                        <h5>Group Photos</h5>
+                        <p class="small text-muted">Capture entire class at once</p>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <div class="text-center">
+                        <i class="fas fa-chart-line fa-2x text-warning mb-2"></i>
+                        <h5>Smart Analytics</h5>
+                        <p class="small text-muted">Detailed attendance reports</p>
+                    </div>
+                </div>
+            </div>
+            <div class="d-grid gap-2 d-md-flex justify-content-md-start">
+                <a href="/dashboard" class="btn btn-primary btn-lg px-4 me-md-2">
+                    <i class="fas fa-tachometer-alt me-2"></i>Go to Dashboard
+                </a>
+                <a href="/register_student" class="btn btn-outline-secondary btn-lg px-4">
+                    <i class="fas fa-user-plus me-2"></i>Register Student
+                </a>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-6 text-center">
+        <div class="position-relative">
+            <img src="https://cdn.pixabay.com/photo/2018/01/17/07/06/laptop-3087585_1280.jpg" 
+                 alt="Smart Attendance" class="img-fluid rounded shadow-lg">
+            <div class="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center">
+                <div class="bg-white rounded p-4 shadow">
+                    <h4 class="text-primary">Get Started Today!</h4>
+                    <p class="mb-0">Start automating your attendance process</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

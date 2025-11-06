@@ -1,0 +1,210 @@
+{% extends "base.html" %}
+
+{% block title %}Take Attendance - Smart Attendance{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-4 border-bottom">
+    <h1 class="h2"><i class="fas fa-camera me-2"></i>Take Attendance</h1>
+</div>
+
+<!-- Flash Messages -->
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        {% for category, message in messages %}
+            <div class="alert alert-{{ 'danger' if category == 'error' else 'success' }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+{% endwith %}
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Take Class Attendance</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="/take_attendance" id="attendanceForm" enctype="multipart/form-data">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="subject_id" class="form-label">Select Subject *</label>
+                                <select class="form-select" id="subject_id" name="subject_id" required>
+                                    <option value="">Select Subject</option>
+                                    {% for subject in subjects %}
+                                    <option value="{{ subject.subject_id }}">
+                                        {{ subject.subject_code }} - {{ subject.subject_name }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="section" class="form-label">Section *</label>
+                                <select class="form-select" id="section" name="section" required>
+                                    <option value="">Select Section</option>
+                                    <option value="A">Section A</option>
+                                    <option value="B">Section B</option>
+                                    <option value="C">Section C</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- MULTIPLE PHOTO UPLOADS -->
+                    <div class="mb-4">
+                        <label class="form-label">Upload Multiple Group Photos *</label>
+                        
+                        <div class="photo-upload-area p-4 border rounded bg-light text-center">
+                            <i class="fas fa-cloud-upload-alt fa-3x text-primary mb-3"></i>
+                            <h5>Upload Class Photos</h5>
+                            <p class="text-muted mb-3">You can upload multiple photos for better recognition</p>
+                            
+                            <div class="mb-3">
+                                <input type="file" id="photo_uploads" name="group_photos" 
+                                       multiple accept="image/*" class="form-control" required>
+                            </div>
+                            
+                            <div id="photo-preview-container" class="row mt-3 d-none">
+                                <!-- Photo previews will be added here dynamically -->
+                            </div>
+                            
+                            <div class="form-text">
+                                <small>
+                                    <i class="fas fa-info-circle me-1"></i>
+                                    Upload multiple photos of the class from different angles for better face recognition.
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-success btn-lg py-3">
+                            <i class="fas fa-check-circle me-2"></i>Process Attendance with Face Recognition
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0"><i class="fas fa-info-circle me-2"></i>Instructions</h5>
+            </div>
+            <div class="card-body">
+                <ol class="small">
+                    <li class="mb-2">Select the subject and section</li>
+                    <li class="mb-2">Upload multiple photos of the class</li>
+                    <li class="mb-2">Take photos from different angles</li>
+                    <li class="mb-2">Ensure good lighting and clear visibility</li>
+                    <li class="mb-2">System will automatically detect faces from all photos</li>
+                    <li class="mb-2">Face recognition will identify registered students</li>
+                    <li>Attendance will be marked automatically</li>
+                </ol>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0"><i class="fas fa-lightbulb me-2"></i>Tips for Better Recognition</h5>
+            </div>
+            <div class="card-body">
+                <div class="small">
+                    <div class="mb-2">
+                        <i class="fas fa-check text-success me-2"></i>
+                        <strong>Multiple Angles:</strong> Upload photos from front, left, right
+                    </div>
+                    <div class="mb-2">
+                        <i class="fas fa-check text-success me-2"></i>
+                        <strong>Good Lighting:</strong> Ensure proper lighting on all faces
+                    </div>
+                    <div class="mb-2">
+                        <i class="fas fa-check text-success me-2"></i>
+                        <strong>Clear View:</strong> Avoid obstructions and blurry images
+                    </div>
+                    <div class="mb-2">
+                        <i class="fas fa-check text-success me-2"></i>
+                        <strong>Different Rows:</strong> Capture different rows separately
+                    </div>
+                    <div>
+                        <i class="fas fa-check text-success me-2"></i>
+                        <strong>No Crowding:</strong> Avoid overlapping faces in photos
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const photoUploads = document.getElementById('photo_uploads');
+    const previewContainer = document.getElementById('photo-preview-container');
+
+    // Handle multiple photo uploads
+    photoUploads.addEventListener('change', function(e) {
+        previewContainer.innerHTML = '';
+        previewContainer.classList.remove('d-none');
+        
+        const files = e.target.files;
+        
+        if (files.length > 0) {
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+                const reader = new FileReader();
+                
+                reader.onload = function(e) {
+                    const col = document.createElement('div');
+                    col.className = 'col-md-3 mb-3';
+                    
+                    col.innerHTML = `
+                        <div class="text-center">
+                            <img src="${e.target.result}" alt="Preview ${i+1}" 
+                                 class="img-fluid rounded border mb-2" style="max-height: 100px;">
+                            <small class="text-success">Photo ${i+1} ✓</small>
+                        </div>
+                    `;
+                    
+                    previewContainer.appendChild(col);
+                };
+                
+                reader.readAsDataURL(file);
+            }
+            
+            console.log(`✅ ${files.length} photos selected for upload`);
+        }
+    });
+
+    // Form validation
+    document.getElementById('attendanceForm').addEventListener('submit', function(e) {
+        const subject = document.getElementById('subject_id').value;
+        const section = document.getElementById('section').value;
+        const files = document.getElementById('photo_uploads').files;
+        
+        if (!subject || !section) {
+            e.preventDefault();
+            alert('Please select both subject and section.');
+            return;
+        }
+        
+        if (files.length === 0) {
+            e.preventDefault();
+            alert('Please upload at least one class photo.');
+            return;
+        }
+        
+        // Show loading state
+        const submitBtn = this.querySelector('button[type="submit"]');
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Processing Photos...';
+        submitBtn.disabled = true;
+    });
+});
+</script>
+{% endblock %}

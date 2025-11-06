@@ -1,0 +1,490 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Smart Attendance{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-4 border-bottom">
+    <h1 class="h2"><i class="fas fa-tachometer-alt me-2"></i>Dashboard</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <div class="btn-group me-2">
+            <span class="btn btn-sm btn-outline-secondary">
+                <i class="fas fa-calendar me-1"></i>{{ now.strftime('%Y-%m-%d') if now else '' }}
+            </span>
+        </div>
+    </div>
+</div>
+
+<!-- Statistics Cards (Your existing cards) -->
+<div class="row">
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-primary shadow h-100 py-2 stat-card">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                            Total Students
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ stats.total_students }}</div>
+                        <div class="mt-2">
+                            <small class="text-success">
+                                <i class="fas fa-user-check me-1"></i>
+                                {{ stats.students_with_faces }} with face data
+                            </small>
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-users fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-success shadow h-100 py-2 stat-card">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                            Students with Face Data
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ stats.students_with_faces }}</div>
+                        <div class="mt-2">
+                            {% if stats.total_students > 0 %}
+                            <small class="text-info">
+                                <i class="fas fa-percentage me-1"></i>
+                                {{ ((stats.students_with_faces / stats.total_students) * 100)|round(1) }}% ready
+                            </small>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-camera fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-info shadow h-100 py-2 stat-card">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                            Total Subjects
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ stats.total_subjects }}</div>
+                        <div class="mt-2">
+                            <small class="text-primary">
+                                <i class="fas fa-book me-1"></i>
+                                Active subjects
+                            </small>
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-book fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-warning shadow h-100 py-2 stat-card">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                            Today's Attendance
+                        </div>
+                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ stats.today_attendance }}</div>
+                        <div class="mt-2">
+                            <small class="text-success">
+                                <i class="fas fa-calendar-day me-1"></i>
+                                Present today
+                            </small>
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-calendar-check fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ATTENDANCE CHARTS SECTION -->
+<div class="row mt-4">
+    <!-- Weekly Trend Chart -->
+    <div class="col-md-8 mb-4">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-chart-line me-2"></i>Weekly Attendance Trend
+                </h5>
+                <div class="btn-group btn-group-sm">
+                    <button class="btn btn-outline-primary active" onclick="changeChartType('line')">Line</button>
+                    <button class="btn btn-outline-primary" onclick="changeChartType('bar')">Bar</button>
+                    <button class="btn btn-outline-primary" onclick="refreshCharts()">
+                        <i class="fas fa-sync-alt"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="card-body">
+                <canvas id="weeklyChart" height="250"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Subject-wise Attendance -->
+    <div class="col-md-4 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-book me-2"></i>Subject-wise Attendance
+                </h5>
+            </div>
+            <div class="card-body">
+                <canvas id="subjectChart" height="250"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Today's Attendance by Section -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-calendar-day me-2"></i>Today's Attendance by Section
+                </h5>
+            </div>
+            <div class="card-body">
+                <canvas id="dailyChart" height="100"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Your existing Quick Actions and System Status sections -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="card-title mb-0"><i class="fas fa-bolt me-2"></i>Quick Actions</h5>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-md-2 mb-3">
+                        <a href="/register_student" class="btn btn-primary w-100 py-3">
+                            <i class="fas fa-user-plus fa-2x mb-2"></i><br>
+                            Register Student
+                        </a>
+                    </div>
+                    <div class="col-md-2 mb-3">
+                        <a href="/take_attendance" class="btn btn-success w-100 py-3">
+                            <i class="fas fa-camera fa-2x mb-2"></i><br>
+                            Take Attendance
+                        </a>
+                    </div>
+                    <div class="col-md-2 mb-3">
+                        <a href="/view_students" class="btn btn-info w-100 py-3">
+                            <i class="fas fa-users fa-2x mb-2"></i><br>
+                            View Students
+                        </a>
+                    </div>
+                    <div class="col-md-2 mb-3">
+                        <a href="/view_attendance" class="btn btn-warning w-100 py-3">
+                            <i class="fas fa-calendar-check fa-2x mb-2"></i><br>
+                            View Attendance
+                        </a>
+                    </div>
+                    <div class="col-md-2 mb-3">
+                        <a href="/add_subject" class="btn btn-secondary w-100 py-3">
+                            <i class="fas fa-book fa-2x mb-2"></i><br>
+                            Add Subject
+                        </a>
+                    </div>
+                    <div class="col-md-2 mb-3">
+                        <a href="/manual_attendance" class="btn btn-dark w-100 py-3">
+                            <i class="fas fa-edit fa-2x mb-2"></i><br>
+                            Manual Update
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Your existing System Status section -->
+<div class="row mt-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0"><i class="fas fa-cogs me-2"></i>System Status</h5>
+            </div>
+            <div class="card-body">
+                <!-- Your existing system status content -->
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0"><i class="fas fa-chart-line me-2"></i>Recent Activity</h5>
+            </div>
+            <div class="card-body">
+                <!-- Your existing recent activity content -->
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+let weeklyChart, subjectChart, dailyChart;
+let currentChartType = 'line';
+
+// Load chart data
+async function loadChartData() {
+    try {
+        const response = await fetch('/attendance_data');
+        const data = await response.json();
+        
+        renderWeeklyChart(data.weekly_trend);
+        renderSubjectChart(data.subject_wise);
+        renderDailyChart(data.daily_attendance);
+    } catch (error) {
+        console.error('Error loading chart data:', error);
+        showError('Failed to load chart data');
+    }
+}
+
+function renderWeeklyChart(weeklyData) {
+    const ctx = document.getElementById('weeklyChart').getContext('2d');
+    
+    const labels = weeklyData.map(item => {
+        const date = new Date(item.date);
+        return date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+    });
+    
+    const percentages = weeklyData.map(item => item.attendance_percent || 0);
+    
+    if (weeklyChart) {
+        weeklyChart.destroy();
+    }
+    
+    weeklyChart = new Chart(ctx, {
+        type: currentChartType,
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Attendance %',
+                data: percentages,
+                borderColor: '#667eea',
+                backgroundColor: currentChartType === 'bar' ? 
+                    'rgba(102, 126, 234, 0.3)' : 'rgba(102, 126, 234, 0.1)',
+                borderWidth: 3,
+                fill: true,
+                tension: 0.4
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return `Attendance: ${context.parsed.y}%`;
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 100,
+                    ticks: {
+                        callback: function(value) {
+                            return value + '%';
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+function renderSubjectChart(subjectData) {
+    const ctx = document.getElementById('subjectChart').getContext('2d');
+    
+    const labels = subjectData.map(item => {
+        const name = item.subject_name;
+        return name.length > 15 ? name.substring(0, 15) + '...' : name;
+    });
+    
+    const percentages = subjectData.map(item => item.avg_attendance || 0);
+    
+    // Generate colors
+    const colors = [
+        '#667eea', '#764ba2', '#f093fb', '#f5576c', '#4facfe', '#00f2fe',
+        '#43e97b', '#38f9d7', '#fa709a', '#fee140', '#a8edea', '#fed6e3'
+    ];
+    
+    if (subjectChart) {
+        subjectChart.destroy();
+    }
+    
+    subjectChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: labels,
+            datasets: [{
+                data: percentages,
+                backgroundColor: colors.slice(0, subjectData.length),
+                borderWidth: 2,
+                borderColor: '#fff'
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        boxWidth: 12,
+                        padding: 15
+                    }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return `${context.label}: ${context.parsed}%`;
+                        }
+                    }
+                }
+            },
+            cutout: '60%'
+        }
+    });
+}
+
+function renderDailyChart(dailyData) {
+    const ctx = document.getElementById('dailyChart').getContext('2d');
+    
+    const labels = dailyData.map(item => `Section ${item.section}`);
+    const percentages = dailyData.map(item => item.attendance_percent || 0);
+    const presentCounts = dailyData.map(item => item.present_count || 0);
+    const totalCounts = dailyData.map(item => item.total_students || 0);
+    
+    if (dailyChart) {
+        dailyChart.destroy();
+    }
+    
+    dailyChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Attendance %',
+                data: percentages,
+                backgroundColor: [
+                    'rgba(102, 126, 234, 0.7)',
+                    'rgba(118, 75, 162, 0.7)', 
+                    'rgba(240, 147, 251, 0.7)'
+                ],
+                borderColor: [
+                    'rgb(102, 126, 234)',
+                    'rgb(118, 75, 162)',
+                    'rgb(240, 147, 251)'
+                ],
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    callbacks: {
+                        afterLabel: function(context) {
+                            const index = context.dataIndex;
+                            return `Present: ${presentCounts[index]}/${totalCounts[index]}`;
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 100,
+                    ticks: {
+                        callback: function(value) {
+                            return value + '%';
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+function changeChartType(type) {
+    currentChartType = type;
+    
+    // Update button states
+    document.querySelectorAll('#weeklyChart').closest('.card').find('.btn-group .btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    event.target.classList.add('active');
+    
+    // Reload data to re-render with new type
+    loadChartData();
+}
+
+function refreshCharts() {
+    const btn = event.target;
+    const originalHtml = btn.innerHTML;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+    btn.disabled = true;
+    
+    loadChartData().finally(() => {
+        setTimeout(() => {
+            btn.innerHTML = originalHtml;
+            btn.disabled = false;
+        }, 1000);
+    });
+}
+
+function showError(message) {
+    // Simple error notification
+    const alert = document.createElement('div');
+    alert.className = 'alert alert-danger alert-dismissible fade show';
+    alert.innerHTML = `
+        <i class="fas fa-exclamation-triangle me-2"></i>
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    document.querySelector('.container-fluid').prepend(alert);
+}
+
+// Load charts when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    loadChartData();
+    
+    // Auto-refresh charts every 2 minutes
+    setInterval(loadChartData, 120000);
+});
+</script>
+{% endblock %}

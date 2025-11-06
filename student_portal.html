@@ -1,0 +1,211 @@
+{% extends "base.html" %}
+
+{% block title %}Student Portal - Smart Attendance{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-4 border-bottom">
+    <h1 class="h2"><i class="fas fa-user-graduate me-2"></i>Student Portal</h1>
+</div>
+
+<!-- Flash Messages -->
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        {% for category, message in messages %}
+            <div class="alert alert-{{ 'danger' if category == 'error' else 'success' }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+{% endwith %}
+
+<div class="row">
+    <!-- Student Login Form -->
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="card-title mb-0"><i class="fas fa-sign-in-alt me-2"></i>Check Your Attendance</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="mb-3">
+                        <label for="enrollment_no" class="form-label">Enrollment Number</label>
+                        <input type="text" class="form-control" id="enrollment_no" name="enrollment_no" 
+                               value="{{ enrollment_no }}" placeholder="Enter your enrollment number" required>
+                        <div class="form-text">Enter your enrollment number to view attendance</div>
+                    </div>
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-success btn-lg">
+                            <i class="fas fa-search me-2"></i>View Attendance
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Student Information -->
+        {% if student_info %}
+        <div class="card mt-4">
+            <div class="card-header bg-info text-white">
+                <h5 class="card-title mb-0"><i class="fas fa-user me-2"></i>Student Information</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-12">
+                        <p><strong>Name:</strong> {{ student_info.name }}</p>
+                        <p><strong>Enrollment:</strong> {{ student_info.enrollment_no }}</p>
+                        <p><strong>Roll No:</strong> {{ student_info.roll_no or 'N/A' }}</p>
+                        <p><strong>Section:</strong> {{ student_info.section }}</p>
+                        <p><strong>Course:</strong> {{ student_info.course or 'N/A' }}</p>
+                        <p><strong>Semester:</strong> {{ student_info.semester or 'N/A' }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Attendance Records -->
+    <div class="col-md-8">
+        {% if student_info %}
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0"><i class="fas fa-calendar-check me-2"></i>Attendance Records</h5>
+                <span class="badge bg-primary">{{ attendance_data|length }} records</span>
+            </div>
+            <div class="card-body">
+                {% if attendance_data %}
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Date</th>
+                                <th>Subject</th>
+                                <th>Status</th>
+                                <th>Confidence</th>
+                                <th>Time</th>
+                                <th>Class %</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for record in attendance_data %}
+                            <tr>
+                                <td>
+                                    <strong>{{ record.session_date }}</strong>
+                                </td>
+                                <td>
+                                    <div>
+                                        <strong>{{ record.subject_code }}</strong>
+                                        <br>
+                                        <small class="text-muted">{{ record.subject_name }}</small>
+                                    </div>
+                                </td>
+                                <td>
+                                    {% if record.status == 'present' %}
+                                    <span class="badge bg-success">Present</span>
+                                    {% else %}
+                                    <span class="badge bg-danger">Absent</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if record.confidence_score %}
+                                    <span class="badge bg-info">{{ record.confidence_score }}%</span>
+                                    {% else %}
+                                    <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <small>{{ record.recognition_time.strftime('%H:%M') if record.recognition_time else 'N/A' }}</small>
+                                </td>
+                                <td>
+                                    <!-- FIXED: Handles null values properly -->
+                                    <span class="badge 
+                                        {% if record.class_attendance >= 75 %}bg-success
+                                        {% elif record.class_attendance >= 50 %}bg-warning
+                                        {% else %}bg-danger{% endif %}">
+                                        {{ record.class_attendance }}%
+                                    </span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Attendance Summary -->
+                <div class="row mt-4">
+                    <div class="col-md-4">
+                        <div class="card text-center">
+                            <div class="card-body">
+                                <h3 class="text-primary">{{ (attendance_data|selectattr('status', 'equalto', 'present')|list|length) }}</h3>
+                                <p class="mb-0">Present Days</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card text-center">
+                            <div class="card-body">
+                                <h3 class="text-danger">{{ (attendance_data|selectattr('status', 'equalto', 'absent')|list|length) }}</h3>
+                                <p class="mb-0">Absent Days</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card text-center">
+                            <div class="card-body">
+                                <h3 class="text-success">
+                                    {% set total = attendance_data|length %}
+                                    {% set present = attendance_data|selectattr('status', 'equalto', 'present')|list|length %}
+                                    {{ "%.1f"|format((present / total * 100) if total > 0 else 0) }}%
+                                </h3>
+                                <p class="mb-0">Overall Attendance</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-calendar-times fa-3x text-muted mb-3"></i>
+                    <h4 class="text-muted">No Attendance Records</h4>
+                    <p class="text-muted">No attendance records found for this student</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% else %}
+        <div class="card">
+            <div class="card-body text-center py-5">
+                <i class="fas fa-user-graduate fa-4x text-muted mb-3"></i>
+                <h4 class="text-muted">Welcome to Student Portal</h4>
+                <p class="text-muted">Enter your enrollment number to view your attendance records</p>
+                <div class="mt-4">
+                    <i class="fas fa-check-circle text-success me-2"></i>
+                    <span>View your attendance by date</span><br>
+                    <i class="fas fa-check-circle text-success me-2"></i>
+                    <span>Check subject-wise attendance</span><br>
+                    <i class="fas fa-check-circle text-success me-2"></i>
+                    <span>See overall attendance percentage</span><br>
+                    <i class="fas fa-check-circle text-success me-2"></i>
+                    <span>No password required</span>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Simple attendance statistics
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Student portal loaded successfully');
+    
+    // Auto-focus on enrollment input
+    var enrollmentInput = document.getElementById('enrollment_no');
+    if (enrollmentInput) {
+        enrollmentInput.focus();
+    }
+});
+</script>
+{% endblock %}
