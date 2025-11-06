@@ -1,0 +1,24 @@
+smart-attendance-system/
+├── app.py
+├── database.py
+├── face_recognition_system.py
+├── requirements.txt
+├── routes/
+│   ├── dashboard.py
+│   ├── register_student.py
+│   ├── view_students.py
+│   ├── take_attendance.py
+│   ├── add_subject.py
+│   └── view_attendance.py
+|   |__ student_portal.py
+|   |__ correct_attendance.py
+└── templates/
+    ├── base.html
+    ├── index.html
+    ├── dashboard.html
+    ├── register_student.html
+    ├── view_students.html
+    ├── take_attendance.html
+    ├── add_subject.html
+    └── view_attendance.html
+    |__ student_portal.html
