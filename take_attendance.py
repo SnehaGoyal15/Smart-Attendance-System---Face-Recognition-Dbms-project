@@ -75,7 +75,13 @@ def take_attendance():
             
             cursor = conn.cursor()
             
-            # Create attendance session
+            # GET ACTUAL TOTAL STUDENTS IN SECTION FROM DATABASE
+            cursor.execute('SELECT COUNT(*) as total_count FROM students WHERE section = %s', (section,))
+            actual_total_students = cursor.fetchone()['total_count']
+            
+            print(f"📊 Section {section}: {actual_total_students} total students, {len(all_recognized_students)} present, {total_faces_detected} faces detected in photos")
+            
+            # Create attendance session with ACTUAL total students
             cursor.execute('''
                 INSERT INTO attendance_sessions 
                 (subject_id, section, session_date, session_time, total_students, present_count)
@@ -83,7 +89,8 @@ def take_attendance():
             ''', (
                 subject_id, section, 
                 datetime.now().date(), datetime.now().time(),
-                total_faces_detected, len(all_recognized_students)
+                actual_total_students,  # ← CORRECTED: Use actual total from database
+                len(all_recognized_students)
             ))
             
             session_id = cursor.lastrowid
@@ -114,10 +121,14 @@ def take_attendance():
             
             conn.commit()
             
+            # Calculate absent count properly
+            absent_count = actual_total_students - len(all_recognized_students)
+            
             flash(
                 f'✅ Attendance taken successfully! '
-                f'Recognized {len(all_recognized_students)}/{total_faces_detected} students in section {section} '
-                f'from {len(uploaded_photos)} photos.',
+                f'Recognized {len(all_recognized_students)}/{actual_total_students} students in section {section}. '
+                f'Absent: {absent_count} students. '
+                f'({len(uploaded_photos)} photos processed, {total_faces_detected} faces detected)',
                 'success'
             )
             
