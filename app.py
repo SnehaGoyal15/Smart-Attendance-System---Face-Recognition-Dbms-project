@@ -10,6 +10,7 @@ from routes.take_attendance import take_attendance_bp
 from routes.add_subject import add_subject_bp
 from routes.view_attendance import view_attendance_bp
 from routes.student_portal import student_portal_bp
+from routes.students import students_bp  # ADD THIS LINE - YOU WERE MISSING THIS
 
 app = Flask(__name__)
 app.secret_key = 'smart-attendance-secret-key-2024'
@@ -22,6 +23,7 @@ app.register_blueprint(take_attendance_bp)
 app.register_blueprint(add_subject_bp)
 app.register_blueprint(view_attendance_bp)
 app.register_blueprint(student_portal_bp)
+app.register_blueprint(students_bp)  # ADD THIS LINE - YOU WERE MISSING THIS
 
 @app.route('/')
 def index():
