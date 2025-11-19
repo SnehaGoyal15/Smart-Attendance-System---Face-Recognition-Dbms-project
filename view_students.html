@@ -3,61 +3,55 @@
 {% block title %}View Students - Smart Attendance{% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-    <h1 class="h2">View Students</h1>
-    <a href="/add_student" class="btn btn-primary">
-        <i class="fas fa-plus"></i> Add Student
-    </a>
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-4 border-bottom">
+    <h1 class="h2"><i class="fas fa-users me-2"></i>View Students</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <a href="{{ url_for('register_student.register_student') }}" class="btn btn-primary">
+            <i class="fas fa-user-plus me-2"></i>Register Student
+        </a>
+    </div>
 </div>
 
 <!-- Filters -->
 <div class="card mb-4">
-    <div class="card-header">
-        <h5 class="card-title mb-0">Filter Students</h5>
-    </div>
     <div class="card-body">
         <form method="GET" class="row g-3">
             <div class="col-md-3">
                 <label class="form-label">Section</label>
                 <select class="form-select" name="section">
                     <option value="">All Sections</option>
-                    <option value="A" {% if filters.section == 'A' %}selected{% endif %}>A</option>
-                    <option value="B" {% if filters.section == 'B' %}selected{% endif %}>B</option>
-                    <option value="C" {% if filters.section == 'C' %}selected{% endif %}>C</option>
+                    <option value="A" {% if filters.section == 'A' %}selected{% endif %}>Section A</option>
+                    <option value="B" {% if filters.section == 'B' %}selected{% endif %}>Section B</option>
+                    <option value="C" {% if filters.section == 'C' %}selected{% endif %}>Section C</option>
                 </select>
             </div>
-            <div class="col-md-4">
+            <div class="col-md-6">
                 <label class="form-label">Search</label>
-                <input type="text" class="form-control" name="search" placeholder="Search by Enrollment, Roll No, Name, Email, Phone..." value="{{ filters.search }}">
+                <input type="text" class="form-control" name="search" value="{{ filters.search }}" 
+                       placeholder="Search by enrollment, name, roll no, email, phone...">
             </div>
-            <div class="col-md-2 d-flex align-items-end">
+            <div class="col-md-3 d-flex align-items-end">
                 <button type="submit" class="btn btn-primary w-100">
-                    <i class="fas fa-filter"></i> Filter
+                    <i class="fas fa-search me-2"></i>Filter
                 </button>
-            </div>
-            <div class="col-md-2 d-flex align-items-end">
-                <a href="/view_students" class="btn btn-outline-secondary w-100">
-                    <i class="fas fa-refresh"></i> Reset
-                </a>
             </div>
         </form>
     </div>
 </div>
 
-<!-- Students List -->
+<!-- Students Table -->
 <div class="card">
     <div class="card-header d-flex justify-content-between align-items-center">
         <h5 class="card-title mb-0">
-            Students List
-            {% if filters.section or filters.search %}
-            <span class="badge bg-primary ms-2">
-                {% if filters.section %}Section {{ filters.section }}{% endif %}
-                {% if filters.section and filters.search %} | {% endif %}
-                {% if filters.search %}Search: "{{ filters.search }}"{% endif %}
-            </span>
-            {% endif %}
+            Students List 
+            <span class="badge bg-primary ms-2">{{ students|length }} students</span>
         </h5>
-        <span class="badge bg-info">{{ students|length }} students</span>
+        <div>
+            <span class="badge bg-success me-2">
+                <i class="fas fa-camera me-1"></i>
+                {{ students|selectattr('has_face_data')|list|length }} with face data
+            </span>
+        </div>
     </div>
     <div class="card-body">
         {% if students %}
@@ -66,11 +60,10 @@
                 <thead class="table-dark">
                     <tr>
                         <th>Enrollment No</th>
-                        <th>Roll No</th>
                         <th>Name</th>
-                        <th>Email</th>
-                        <th>Phone</th>
+                        <th>Roll No</th>
                         <th>Section</th>
+                        <th>Course</th>
                         <th>Face Data</th>
                         <th>Actions</th>
                     </tr>
@@ -78,44 +71,96 @@
                 <tbody>
                     {% for student in students %}
                     <tr>
-                        <td><strong>{{ student.enrollment_no }}</strong></td>
-                        <td>{{ student.roll_no or '-' }}</td>
+                        <td>
+                            <strong>{{ student.enrollment_no }}</strong>
+                        </td>
                         <td>{{ student.name }}</td>
-                        <td>{{ student.email }}</td>
-                        <td>{{ student.phone or '-' }}</td>
+                        <td>{{ student.roll_no or 'N/A' }}</td>
                         <td>
                             <span class="badge bg-primary">{{ student.section }}</span>
                         </td>
+                        <td>{{ student.course or 'N/A' }}</td>
                         <td>
                             {% if student.has_face_data %}
                             <span class="badge bg-success">
-                                <i class="fas fa-check"></i> Registered
+                                <i class="fas fa-check-circle me-1"></i>Ready
                             </span>
                             {% else %}
                             <span class="badge bg-warning">
-                                <i class="fas fa-times"></i> Not Registered
+                                <i class="fas fa-exclamation-triangle me-1"></i>No Face
                             </span>
                             {% endif %}
                         </td>
                         <td>
                             <div class="btn-group btn-group-sm">
-                                <button class="btn btn-outline-primary edit-btn" 
-                                        data-enrollment="{{ student.enrollment_no }}"
-                                        data-roll="{{ student.roll_no or '' }}"
-                                        data-name="{{ student.name }}"
-                                        data-email="{{ student.email }}"
-                                        data-phone="{{ student.phone or '' }}"
-                                        data-section="{{ student.section }}">
-                                    <i class="fas fa-edit"></i>
+                                <button type="button" class="btn btn-outline-primary" 
+                                        data-bs-toggle="modal" data-bs-target="#editStudentModal{{ student.enrollment_no }}">
+                                    <i class="fas fa-edit"></i> Edit
                                 </button>
-                                <button class="btn btn-outline-danger delete-btn" 
-                                        data-enrollment="{{ student.enrollment_no }}"
-                                        data-name="{{ student.name }}">
-                                    <i class="fas fa-trash"></i>
-                                </button>
+                                <a href="{{ url_for('students.delete_student', enrollment_no=student.enrollment_no) }}" 
+                                   class="btn btn-outline-danger" 
+                                   onclick="return confirm('Are you sure you want to delete {{ student.name }}?')">
+                                    <i class="fas fa-trash"></i> Delete
+                                </a>
                             </div>
                         </td>
                     </tr>
+
+                    <!-- Edit Student Modal -->
+                    <div class="modal fade" id="editStudentModal{{ student.enrollment_no }}" tabindex="-1">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title">Edit Student</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                </div>
+                                <form method="POST" action="{{ url_for('students.update_student') }}">
+                                    <div class="modal-body">
+                                        <input type="hidden" name="enrollment_no" value="{{ student.enrollment_no }}">
+                                        
+                                        <div class="mb-3">
+                                            <label class="form-label">Enrollment No</label>
+                                            <input type="text" class="form-control" value="{{ student.enrollment_no }}" readonly>
+                                            <small class="form-text text-muted">Enrollment number cannot be changed</small>
+                                        </div>
+                                        
+                                        <div class="mb-3">
+                                            <label class="form-label">Full Name *</label>
+                                            <input type="text" class="form-control" name="name" value="{{ student.name }}" required>
+                                        </div>
+                                        
+                                        <div class="mb-3">
+                                            <label class="form-label">Roll No</label>
+                                            <input type="text" class="form-control" name="roll_no" value="{{ student.roll_no or '' }}">
+                                        </div>
+                                        
+                                        <div class="mb-3">
+                                            <label class="form-label">Email</label>
+                                            <input type="email" class="form-control" name="email" value="{{ student.email or '' }}">
+                                        </div>
+                                        
+                                        <div class="mb-3">
+                                            <label class="form-label">Phone</label>
+                                            <input type="text" class="form-control" name="phone" value="{{ student.phone or '' }}">
+                                        </div>
+                                        
+                                        <div class="mb-3">
+                                            <label class="form-label">Section *</label>
+                                            <select class="form-select" name="section" required>
+                                                <option value="A" {% if student.section == 'A' %}selected{% endif %}>Section A</option>
+                                                <option value="B" {% if student.section == 'B' %}selected{% endif %}>Section B</option>
+                                                <option value="C" {% if student.section == 'C' %}selected{% endif %}>Section C</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                        <button type="submit" class="btn btn-primary">Update Student</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
                     {% endfor %}
                 </tbody>
             </table>
@@ -126,128 +171,31 @@
             <h4 class="text-muted">No Students Found</h4>
             <p class="text-muted">
                 {% if filters.section or filters.search %}
-                No students found matching your criteria
+                Try changing your filters
                 {% else %}
                 No students registered yet
                 {% endif %}
             </p>
-            <a href="/add_student" class="btn btn-primary">
-                <i class="fas fa-plus"></i> Add First Student
+            <a href="{{ url_for('register_student.register_student') }}" class="btn btn-primary">
+                <i class="fas fa-user-plus me-2"></i>Register First Student
             </a>
         </div>
         {% endif %}
     </div>
 </div>
+{% endblock %}
 
-<!-- Edit Student Modal -->
-<div class="modal fade" id="editStudentModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Edit Student</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <!-- YEH LINE CHANGE KARO -->
-            <form id="editStudentForm" method="POST" action="{{ url_for('view_students.update_student') }}">
-                <div class="modal-body">
-                    <input type="hidden" name="enrollment_no" id="edit_enrollment_no">
-                    
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label class="form-label">Enrollment No</label>
-                                <input type="text" class="form-control" value="" id="edit_enrollment_display" disabled>
-                                <small class="text-muted">Enrollment number cannot be changed</small>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label class="form-label">Roll No</label>
-                                <input type="text" class="form-control" name="roll_no" id="edit_roll_no">
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label class="form-label">Full Name</label>
-                        <input type="text" class="form-control" name="name" id="edit_name" required>
-                    </div>
-                    
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label class="form-label">Email</label>
-                                <input type="email" class="form-control" name="email" id="edit_email" required>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label class="form-label">Phone Number</label>
-                                <input type="tel" class="form-control" name="phone" id="edit_phone">
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label class="form-label">Section</label>
-                        <select class="form-select" name="section" id="edit_section" required>
-                            <option value="A">A</option>
-                            <option value="B">B</option>
-                            <option value="C">C</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Update Student</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
+{% block scripts %}
 <script>
-// Event listeners for edit buttons
-document.querySelectorAll('.edit-btn').forEach(button => {
-    button.addEventListener('click', function() {
-        const enrollmentNo = this.getAttribute('data-enrollment');
-        const rollNo = this.getAttribute('data-roll');
-        const name = this.getAttribute('data-name');
-        const email = this.getAttribute('data-email');
-        const phone = this.getAttribute('data-phone');
-        const section = this.getAttribute('data-section');
-        
-        editStudent(enrollmentNo, rollNo, name, email, phone, section);
-    });
-});
-
-// Event listeners for delete buttons
-document.querySelectorAll('.delete-btn').forEach(button => {
-    button.addEventListener('click', function() {
-        const enrollmentNo = this.getAttribute('data-enrollment');
-        const name = this.getAttribute('data-name');
-        
-        deleteStudent(enrollmentNo, name);
-    });
-});
-
-function editStudent(enrollmentNo, rollNo, name, email, phone, section) {
-    document.getElementById('edit_enrollment_no').value = enrollmentNo;
-    document.getElementById('edit_enrollment_display').value = enrollmentNo;
-    document.getElementById('edit_roll_no').value = rollNo;
-    document.getElementById('edit_name').value = name;
-    document.getElementById('edit_email').value = email;
-    document.getElementById('edit_phone').value = phone;
-    document.getElementById('edit_section').value = section;
+// Simple confirmation for delete actions
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Students page loaded successfully');
     
-    var modal = new bootstrap.Modal(document.getElementById('editStudentModal'));
-    modal.show();
-}
-
-function deleteStudent(enrollmentNo, name) {
-    if (confirm('Are you sure you want to delete student: ' + name + ' (' + enrollmentNo + ')?')) {
-        window.location.href = '{{ url_for("view_students.delete_student") }}?enrollment_no=' + enrollmentNo;
+    // Auto-focus on search input
+    var searchInput = document.querySelector('input[name="search"]');
+    if (searchInput) {
+        searchInput.focus();
     }
-}
+});
 </script>
 {% endblock %}
